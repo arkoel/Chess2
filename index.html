@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+
+<style>
+    #page {
+    background-color: #575656;
+    }
+    .colum {
+        display: inline-grid;
+    }
+
+    .board {
+        left:100px;
+        top:100px;
+        border: 2px #000000 solid;
+    }
+
+    .tile {
+/*
+        border: 2px #000000 solid;
+*/
+        padding-top: -10px;
+        float: left;
+        z-index: 1;
+    }
+
+    .piece {
+
+        position: absolute;
+        top: 40px;
+        left: 40px;
+        z-index: 2;
+
+    }
+
+
+</style>
+
+
+<body id="page">
+<!--<button onclick="loadboard(8,8)">druk hier maar op dan</button>-->
+<div></div>
+<div id="board_1" class="board" style="top:100px"></div>
+
+<button onclick="if(Boards[0].pov==='b'){Boards[0].pov='w';}else{Boards[0].pov='b';}Boards[0].changepov(Tiles);" style="height: 100px;width: 100px;"></button>
+<script>
+    var tilesize = 60;
+    var not = "abcdefghijklmnopqrstuvwxyz"
+
+    class Piece{
+        constructor(name,pos,boardid) {
+            this.name = name;
+            this.pos = pos;
+            this.moving = false;
+            this.moving = false;
+            this.boardid = boardid;
+            this.moves = [];
+        }
+        move(){
+            document.getElementById(this.pos).style.left = document.getElementById("tile_"+this.pos).getBoundingClientRect().left+"px";
+            document.getElementById(this.pos).style.top = document.getElementById("tile_"+this.pos).getBoundingClientRect().top + "px";
+        }
+        getnewpos() {
+            let piecehtml = document.getElementById(this.pos);
+            let Xpiece = piecehtml.style.left;
+            let Ypiece = piecehtml.style.top;
+            Xpiece = parseInt(Xpiece.substring(0,Xpiece.length-2));
+            Ypiece = parseInt(Ypiece.substring(0,Ypiece.length-2));
+
+            let alltiles  = document.getElementsByClassName("tile");
+            let toptile = [999,0];
+            for(let i =0; i<alltiles.length;i++){
+                let x = alltiles[i].getBoundingClientRect().left
+
+                let y = alltiles[i].getBoundingClientRect().top.toString();
+                let distance = Math.sqrt(Math.pow(Xpiece-x, 2)+Math.pow(Ypiece-y, 2));
+
+                if(distance<toptile[0]){toptile[0] = distance; toptile[1] = alltiles[i]}
+            }
+            return toptile[1].id.split("_").pop()
+
+    }
+
+    }
+
+    class Tile{
+        constructor(state, pos, boardid) {
+            this.state = state;
+            this.pos = pos;
+            this.firstclick = false;
+            this.boardid = boardid;
+        }
+        tilecolor() {
+            switch (this.state) {
+                case 0:
+                    return "#ffffff";
+                case 1:
+                    return "#dccfbe";
+                case 2:
+                    return "#a17b65"
+            }
+        }
+        defaultcolor(){
+            document.getElementById("tile_"+this.pos).style.backgroundColor = this.tilecolor();
+        }
+
+    }
+
+
+
+    var Pieces = [];
+    var Tiles = [];
+    class Board {
+        constructor() {
+        this.boardid = Boards.length;
+        this.white_to_move = "w";
+        this.pov = "w"
+
+        }
+        changepov(Tiles) {
+            for (let i = 0; i < Tiles.length; i++) {
+                document.getElementById("tile_" + Tiles[i].pos).id += "-";
+            }
+            for (let i = 0; i < Tiles.length; i++) {
+                let newpos = not.charAt(this.Xboard - 1 - not.indexOf(Tiles[i].pos.charAt(0))) + parseInt(this.Yboard + 1 - Tiles[i].pos.substr(1));
+                console.log(newpos);
+                document.getElementById("tile_" + Tiles[i].pos + "-").id = "tile_" + newpos;
+                Tiles[i].pos = newpos;
+            }
+            for (let i = 0; i < Tiles.length; i++) {
+                if (this.Xboard % 2 ^ this.Yboard % 2) {
+                    Tiles[i].state++;
+                    if (Tiles[i].state > 2) {
+                        Tiles[i].state = 1;
+                    }
+                }
+                Tiles[i].defaultcolor();
+            }
+
+            for (let i = 0; i < Pieces.length; i++) {
+                Pieces[i].move()
+            }
+
+        }
+        createboard(X, Y, FEN) {
+            this.Xboard = X;
+            this.Yboard = Y;
+            let boardclass = this;
+            console.log(boardclass);
+            let board = "";
+            var state = 2;
+            let pos = "a1";
+            for (let i = 0; i < this.Xboard; i++) {
+                board += "<div class='colum'>";
+                if (i % 2) {state = 2;} else {state = 1;}
+                //correct when new colum
+
+                for (var j = this.Yboard; j > 0; j--) {
+                    pos = not.charAt(i)+j;
+                    Tiles[Tiles.length] = new Tile(state,pos, this.boardid);
+                    let color = Tiles[Tiles.length-1].tilecolor();
+                    board += '<div class="tile" id="tile_'+pos+'" draggable="false" style="background-color: '+color+'; height: '+tilesize+'px; width: '+tilesize+'px;"></div>';
+                    // board += not.substring(i,i+1)+(j+1);
+                    if (state === 1) {
+                        state = 2;
+                    } else {
+                        state = 1;
+                    }
+                }
+                board += "</div>";
+
+
+            }
+            //tiles loaded
+            //load pieces
+            const Notation = {
+                "r": {name: 'white_rook'},
+                "n": {name: 'white_horse'},
+                "b": {name: 'white_bishop'},
+                "q": {name: 'white_queen'},
+                "k": {name: 'white_king'},
+                "p": {name: 'white_pawn'},
+                "R": {name: 'black_rook'},
+                "N": {name: 'black_horse'},
+                "B": {name: 'black_bishop'},
+                "Q": {name: 'black_queen'},
+                "K": {name: 'black_king'},
+                "P": {name: 'black_pawn'}
+            }
+            //check of FEN is valid?
+            pos = 0;
+            var x = 0, y = 0;
+            for (let i = 0; i < FEN.length; i++) {
+                if (FEN.substr(i, 1) === ' ') {
+                    pos++;
+                    i++;
+                }
+                const numbers = "123456789"
+                switch (pos) {
+                    case 0:
+                        if (FEN.charAt(i) === '/') {
+
+                            x = 0;
+                            y++;
+                        }
+                        if (numbers.includes(FEN.charAt(i))) {
+                            x += Number(FEN.charAt(i));
+
+                        }
+                        if (FEN.charAt(i) in Notation) {
+                            var loc = not.substr(x, 1) + (y + 1)
+                            var name = Notation[FEN.charAt(i)].name;
+                            var style = "background-image: url('tiles/" + name + ".png'); height: " + tilesize + "px; width: " + tilesize + "px;";
+                            board += '<div class="piece" id="' + loc + '" style="' + style + '"></div>';
+
+                            Pieces[Pieces.length] = new Piece(name, loc, this.boardid)
+
+                            x++;
+                        }
+                        break;
+
+                    case 1:
+                        if(FEN.charAt(i)==="b"||FEN.charAt(i)==="w") {
+                            this.white_to_move = FEN.charAt(i);
+                        }
+                        break;
+
+                    case 2:
+                        //who can castle
+                        break;
+
+                    case 3:
+                        //en passant babyyyyyy
+                        break;
+
+                    case 4:
+                        //fity-move rule
+                        break;
+
+                    case 5:
+                        //fullmove number hoeveel volle moves er zijn gemaakt
+                        break;
+
+                    default:
+                        alert('ERROR SOMETHING WENT WRONG');
+                }
+            }
+            console.log(Pieces);
+            console.log(Tiles);
+            document.getElementById("board_1").innerHTML = board;
+            document.getElementById("board_1").style.width = tilesize * this.Xboard + "px"
+            document.getElementById("board_1").style.height = tilesize * this.Yboard + "px"
+
+
+
+
+            function arrayfunction(piece){
+                piece.move();
+            }//move all pieces to correct spot
+            Pieces.forEach(arrayfunction)
+
+
+            document.querySelectorAll(".tile").forEach(tilehtml => {
+                tilehtml.oncontextmenu = function(e) {
+                    e.preventDefault();
+                    //geen raar menu als je rechtsklikt
+                }
+                tilehtml.addEventListener("mousedown", mousedown, false);
+                tilehtml.addEventListener("mouseup", mouseup, false);
+            });
+
+
+
+
+            document.querySelectorAll(".piece").forEach(piecehtml => {
+                piecehtml.oncontextmenu = function(e) {
+                    e.preventDefault();
+                    //geen raar menu als je rechtsklikt
+                }
+                piecehtml.addEventListener("mousedown", mousedown, false);
+                piecehtml.addEventListener("mouseup", mouseup, false);
+
+            });
+        }//end of create board
+
+
+    }//end of class board
+
+
+
+
+    function move(e) {
+
+        for(let i = 0; i < Pieces.length;i++){
+            if(Pieces[i].moving){piece = Pieces[i]}
+        }
+        piecehtml = document.getElementById(piece.pos);
+        for(let i=0; i<Boards.length;i++){
+            if(Boards[i].boardid === piece.boardid){var board = Boards[i];}
+        }
+
+        if(e.buttons === 0){stopmove(piece, piecehtml, board)}
+        // document.removeEventListener("mousemove", move);piece.moving = false;console.log("fixed");
+        //removes sticky pieces
+            var newX = e.clientX - 30;
+            var newY = e.clientY - 30;
+
+            piecehtml.style.left = newX + "px";
+            piecehtml.style.top = newY + "px";
+
+        }
+
+    function stopmove(piece, piecehtml, board){
+
+        piece.moving = false;
+        document.removeEventListener("mousemove", move);
+        console.log(piece.pos+"-"+piece.moving);
+        let new_pos = piece.getnewpos();
+
+        if(piece.moves[1].includes(new_pos)){
+            document.getElementById(new_pos).remove()
+            for (let i = 0; i < Pieces.length; i++) {
+                if (Pieces[i].pos === new_pos) {Pieces.splice(i, 1);}
+            }//remove hit piece
+        piece.moves[0] = new_pos;
+        }
+        let nextturn = false;
+        if(!(new_pos===piece.pos) && (piece.moves[0].includes(new_pos) || piece.moves[0].includes(new_pos))){nextturn = true}
+
+        if(piece.moves[0].includes(new_pos)){
+            piecehtml.id = new_pos;
+            piece.pos = new_pos;
+        }
+
+        piece.move(); //not always works or something
+        if(nextturn) {
+            if (board.white_to_move === "b") {board.white_to_move = "w"} else {board.white_to_move = "b"}
+        }
+
+    }
+
+    function calcmoves(piece, piecehtml,board){
+        let moves = ["g5"];
+        let hits = ["a1"];
+
+
+        switch(piece.name.split("_").pop()){
+            case "pawn":
+                if(piece.name.charAt(0)===board.pov){
+                    for(let i=0;i<Pieces.length;i++){
+                        let front = parseInt(piece.pos.substr(1))
+                            if(piece.name.charAt(0)==='w'){front++}else{front--}
+                        if((Pieces[i].pos === piece.pos.charAt(0)+front) && front <= board.Yboard){
+                            moves[moves.length] = piece.pos.charAt(0)+front;
+                        }
+                    }
+
+                    console.log(moves);
+                }
+
+                break;
+            case "rook":
+
+                break;
+            case "horse":
+
+                break;
+            case "pishop":
+
+                break;
+            case "queen":
+
+                break;
+            case "king":
+
+                break;
+        }
+
+
+        return [moves,hits];
+
+    }
+
+
+    function mousedown(e) {
+        e.preventDefault();
+        if(e.button === 2) {
+
+            //rightclick
+            //if piece: tile below green / normal
+            if(e.path[0].className === 'tile') {
+                    tilehtml = e.path[0];
+                    let pos = tilehtml.id.split("_").pop()
+                for (let i = 0; i < Tiles.length; i++) {
+                    if(Tiles[i].pos === pos){tile = Tiles[i];}
+                }
+
+            }else if(e.path[0].className === 'piece') {
+                piecehtml = e.path[0];
+                for (let i = 0; i < Tiles.length; i++) {
+                    if (Tiles[i].pos === piecehtml.id) {
+                        tile = Tiles[i]
+                    }
+                }
+            tilehtml = document.getElementById("tile_"+piecehtml.id)
+            }
+            tile.firstclick = !tile.firstclick
+
+            if (tile.firstclick === true) {
+                if(tile.state === 1){tilehtml.style.backgroundColor = "rgb(67,161,57)";}
+                if(tile.state === 2){tilehtml.style.backgroundColor = "rgb(56,133,48)";}
+            }
+            else{tile.defaultcolor()}
+
+         //draw arrow
+        }//------------------------------------------------------------------------------------------------------------------------------------
+        if(e.button === 0) {
+                //leftclick
+
+                //remove all green
+                for (let i = 0; i < Tiles.length; i++) {
+                    Tiles[i].defaultcolor();
+                    Tiles[i].firstclick = false;
+                }
+
+
+                //move piece
+                if(e.path[0].className === 'piece' ){
+                    piecehtml = e.path[0]
+
+                    for(let i = 0; i < Pieces.length; i++) {
+                        if(Pieces[i].pos === piecehtml.id){piece = Pieces[i]}
+                        Pieces[i].moving = false;
+                    }
+                    for(let i=0; i<Boards.length;i++){
+                        if(Boards[i].boardid === piece.boardid){var board = Boards[i];}
+                    }
+                    if(board.white_to_move === piece.name.charAt(0)) {
+                        piece.moves = calcmoves(piece, piecehtml, board);
+                        piece.moving = true;
+                        document.addEventListener("mousemove", move);
+                        console.log(piece.pos + "-" + piece.moving);
+                    }
+
+                }
+
+        }
+
+    }
+    function mouseup(e) {
+    if(e.button === 0 && e.path[0].className === 'piece') {
+        piecehtml = e.path[0];
+        for (let i = 0; i < Pieces.length; i++) {
+            if (Pieces[i].pos === piecehtml.id) {piece = Pieces[i];}
+        }
+        for(let i=0; i<Boards.length;i++){
+            if(Boards[i].boardid === piece.boardid){var board = Boards[i];}
+        }
+
+        if (piece.moving) {
+                stopmove(piece, piecehtml,board);
+            }
+        }
+    }
+    var Boards = [];
+    Boards[0] = new Board();
+    Boards[0].createboard(10,8,'rnbqkkqbnr/pppppppppp/8/8/8/8/PPPPPPPPPP/RNBQKKQBNR w KQkq - 0 1')
+
+</script>
+
+</body>
+</html>

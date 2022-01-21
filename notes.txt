@@ -1,0 +1,4 @@
+cards cost points
+get points by taking pieces
+when a piece gets taken without a card : both players draw card
+when a piece gets taken any way : attacker gains value of piece in points, defender gets 1 point
