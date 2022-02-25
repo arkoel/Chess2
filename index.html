@@ -48,7 +48,6 @@
 <button onclick="if(Boards[0].pov==='b'){Boards[0].pov='w';}else{Boards[0].pov='b';}Boards[0].changepov(Tiles);" style="height: 100px;width: 100px;"></button>
 <script>
     var tilesize = 60;
-    var not = "abcdefghijklmnopqrstuvwxyz"
 
     class Piece{
         constructor(name,pos,boardid) {
@@ -60,7 +59,7 @@
             this.moves = [];
         }
         move(){
-            document.getElementById(this.pos).style.left = document.getElementById("tile_"+this.pos).getBoundingClientRect().left+"px";
+            document.getElementById(this.pos).style.left = document.getElementById("tile_"+this.pos).getBoundingClientRect().left + "px";
             document.getElementById(this.pos).style.top = document.getElementById("tile_"+this.pos).getBoundingClientRect().top + "px";
         }
         getnewpos() {
@@ -80,7 +79,7 @@
 
                 if(distance<toptile[0]){toptile[0] = distance; toptile[1] = alltiles[i]}
             }
-            return toptile[1].id.split("_").pop()
+        return toptile[1].id.split("_").pop()
 
     }
 
@@ -125,8 +124,8 @@
                 document.getElementById("tile_" + Tiles[i].pos).id += "-";
             }
             for (let i = 0; i < Tiles.length; i++) {
-                let newpos = not.charAt(this.Xboard - 1 - not.indexOf(Tiles[i].pos.charAt(0))) + parseInt(this.Yboard + 1 - Tiles[i].pos.substr(1));
-                console.log(newpos);
+                let Int = PosToInt(Tiles[i].pos)
+                let newpos = IntToPos(this.Xboard + 1 - Int[0], this.Yboard + 1 - Int[1]);
                 document.getElementById("tile_" + Tiles[i].pos + "-").id = "tile_" + newpos;
                 Tiles[i].pos = newpos;
             }
@@ -146,6 +145,7 @@
 
         }
         createboard(X, Y, FEN) {
+            console.log("FUCK ME!!!");
             this.Xboard = X;
             this.Yboard = Y;
             let boardclass = this;
@@ -159,11 +159,11 @@
                 //correct when new colum
 
                 for (var j = this.Yboard; j > 0; j--) {
-                    pos = not.charAt(i)+j;
+                    pos = IntToPos(i+1,j);
+
                     Tiles[Tiles.length] = new Tile(state,pos, this.boardid);
                     let color = Tiles[Tiles.length-1].tilecolor();
                     board += '<div class="tile" id="tile_'+pos+'" draggable="false" style="background-color: '+color+'; height: '+tilesize+'px; width: '+tilesize+'px;"></div>';
-                    // board += not.substring(i,i+1)+(j+1);
                     if (state === 1) {
                         state = 2;
                     } else {
@@ -211,7 +211,7 @@
 
                         }
                         if (FEN.charAt(i) in Notation) {
-                            var loc = not.substr(x, 1) + (y + 1)
+                            var loc = IntToPos(x+1,y+1)
                             var name = Notation[FEN.charAt(i)].name;
                             var style = "background-image: url('tiles/" + name + ".png'); height: " + tilesize + "px; width: " + tilesize + "px;";
                             board += '<div class="piece" id="' + loc + '" style="' + style + '"></div>';
@@ -293,6 +293,7 @@
 
 
     function move(e) {
+        //console.log(e);
 
         for(let i = 0; i < Pieces.length;i++){
             if(Pieces[i].moving){piece = Pieces[i]}
@@ -302,7 +303,6 @@
             if(Boards[i].boardid === piece.boardid){var board = Boards[i];}
         }
 
-        if(e.buttons === 0){stopmove(piece, piecehtml, board)}
         // document.removeEventListener("mousemove", move);piece.moving = false;console.log("fixed");
         //removes sticky pieces
             var newX = e.clientX - 30;
@@ -314,22 +314,23 @@
         }
 
     function stopmove(piece, piecehtml, board){
-
+        piecehtml.style.zIndex = 2;
         piece.moving = false;
         document.removeEventListener("mousemove", move);
         console.log(piece.pos+"-"+piece.moving);
         let new_pos = piece.getnewpos();
-
         if(piece.moves[1].includes(new_pos)){
+
             document.getElementById(new_pos).remove()
             for (let i = 0; i < Pieces.length; i++) {
                 if (Pieces[i].pos === new_pos) {Pieces.splice(i, 1);}
             }//remove hit piece
         piece.moves[0] = new_pos;
         }
-        let nextturn = false;
-        if(!(new_pos===piece.pos) && (piece.moves[0].includes(new_pos) || piece.moves[0].includes(new_pos))){nextturn = true}
 
+        let nextturn = false;
+        if(!(new_pos===piece.pos) && piece.moves[0].includes(new_pos) ){nextturn = true}
+        console.log(nextturn)
         if(piece.moves[0].includes(new_pos)){
             piecehtml.id = new_pos;
             piece.pos = new_pos;
@@ -342,37 +343,144 @@
 
     }
 
+    function PosToInt(loc){
+        let not = "abcdefghijklmnopqrstuvwxyz";
+        let x = parseInt(not.indexOf(loc.charAt(0))+1);
+        let y = parseInt(loc.substr(1));
+        return [x,y];
+    }
+    function IntToPos(x,y){
+        let not = "abcdefghijklmnopqrstuvwxyz";
+        return not.charAt(x-1)+y;
+    }
+
+
+
+
+
+
+
     function calcmoves(piece, piecehtml,board){
-        let moves = ["g5"];
-        let hits = ["a1"];
+        let moves = [];
+        let hits = [];
 
-
+        let dir;
+        let dx;
+        let dy;
+        let end;
+        let stop
+        let n;
+        let m;
+        let pos = PosToInt(piece.pos);
+        console.log(piece.name.split("_").pop());
         switch(piece.name.split("_").pop()){
             case "pawn":
-                if(piece.name.charAt(0)===board.pov){
-                    for(let i=0;i<Pieces.length;i++){
-                        let front = parseInt(piece.pos.substr(1))
-                            if(piece.name.charAt(0)==='w'){front++}else{front--}
-                        if((Pieces[i].pos === piece.pos.charAt(0)+front) && front <= board.Yboard){
-                            moves[moves.length] = piece.pos.charAt(0)+front;
+                let front = PosToInt(piece.pos)
+                let Ystart;
+
+                if(piece.name.charAt(0)==='w'){dir=1;Ystart=2}else{dir=-1;Ystart=board.Yboard-1}
+                front[1]+=dir
+                let move = [true,true];
+                for(let i=0;i<Pieces.length;i++){
+                        if(Pieces[i].pos === IntToPos(front[0],front[1])){move[0] = false;move[1] = false}
+                        if(Pieces[i].pos === IntToPos(front[0],front[1]+dir)){move[1] = false;}
+                        if(Pieces[i].pos === IntToPos(front[0]-1,front[1]) && Pieces[i].name.charAt(0)!==board.white_to_move){ hits[hits.length] = IntToPos(front[0]-1,front[1]);}
+                        if(Pieces[i].pos === IntToPos(front[0]+1,front[1]) && Pieces[i].name.charAt(0)!==board.white_to_move){ hits[hits.length] = IntToPos(front[0]+1,front[1]);}
+                    }
+                if(move[0]){
+                    moves[moves.length] = IntToPos(front[0],front[1]);
+                    if(move[1] && PosToInt(piece.pos)[1]===Ystart){moves[moves.length] = IntToPos(front[0],front[1]+dir);}
+                }
+                break;
+
+            case "rook":
+                end = false;
+                stop = false;
+                dir = [[0,1],[1,0],[0,-1],[-1,0]];
+                n = 0;
+                m = 1;
+                while(!stop){
+                     dx = pos[0]+m * dir[n][0];
+                     dy = pos[1]+m * dir[n][1];
+                    for(let i=0;i<Pieces.length;i++) {
+                        if(Pieces[i].pos === IntToPos(dx,dy)){
+                            if(Pieces[i].name.charAt(0)!==board.white_to_move){hits[hits.length]=IntToPos(dx,dy)}
+                            end = true;
                         }
                     }
+                    if(!(dx>=1 && dx <=board.Xboard && dy>=1 && dy<=board.Yboard)){end = true;}
+                    if(!end){
+                        moves[moves.length] = IntToPos(dx,dy)
+                        m++;
+                    }else{m=1;n++;end=false;}
+                if(n===4){stop=true;}
+                }
+                break;
 
-                    console.log(moves);
+            case "horse":
+                let hit = false
+                dir = [[-1,2],[1,2],[2,1],[2,-1],[-1,-2],[1,-2],[-2,1],[-2,-1]];
+                for(let i=0;i<8;i++){
+                    dx = pos[0]+dir[i][0];
+                    dy = pos[1]+dir[i][1];
+                    for(let j=0;j<Pieces.length;j++){
+                        if(Pieces[j].pos === IntToPos(dx,dy)){
+                            hit = true;
+                            if(Pieces[j].name.charAt(0)!==board.white_to_move){hits[hits.length]=IntToPos(dx,dy)}
+                        }
+                    }
+                    if(!hit){moves[moves.length]=IntToPos(dx,dy)}
+                    hit = false
+                }
+                break;
+
+            case "bishop":
+                end = false;
+                stop = false;
+                dir = [[1,1],[1,-1],[-1,-1],[-1,1]];
+                n = 0;
+                m = 1;
+                while(!stop){
+                    dx = pos[0]+m * dir[n][0];
+                    dy = pos[1]+m * dir[n][1];
+                    for(let i=0;i<Pieces.length;i++) {
+                        if(Pieces[i].pos === IntToPos(dx,dy)){
+                            if(Pieces[i].name.charAt(0)!==board.white_to_move){hits[hits.length]=IntToPos(dx,dy)}
+                            end = true;
+                        }
+                    }
+                    if(!(dx>=1 && dx <=board.Xboard && dy>=1 && dy<=board.Yboard)){end = true;}
+                    if(!end){
+                        moves[moves.length] = IntToPos(dx,dy)
+                        m++;
+                    }else{m=1;n++;end=false;}
+                    if(n===4){stop=true;}
                 }
 
-                break;
-            case "rook":
-
-                break;
-            case "horse":
-
-                break;
-            case "pishop":
 
                 break;
             case "queen":
-
+                end = false;
+                stop = false;
+                dir = [[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]];
+                n = 0;
+                m = 1;
+                while(!stop){
+                    dx = pos[0]+m * dir[n][0];
+                    dy = pos[1]+m * dir[n][1];
+                    for(let i=0;i<Pieces.length;i++) {
+                        if(Pieces[i].pos === IntToPos(dx,dy)){
+                            if(Pieces[i].name.charAt(0)!==board.white_to_move){hits[hits.length]=IntToPos(dx,dy)}
+                            end = true;
+                        }
+                    }
+                    if(!(dx>=1 && dx <=board.Xboard && dy>=1 && dy<=board.Yboard)){end = true;}
+                    if(!end){
+                        moves[moves.length] = IntToPos(dx,dy)
+                        m++;
+                    }else{m=1;n++;end=false;}
+                    if(n===8){stop=true;}
+                }
                 break;
             case "king":
 
@@ -386,6 +494,7 @@
 
 
     function mousedown(e) {
+
         e.preventDefault();
         if(e.button === 2) {
 
@@ -441,16 +550,15 @@
                     if(board.white_to_move === piece.name.charAt(0)) {
                         piece.moves = calcmoves(piece, piecehtml, board);
                         piece.moving = true;
+                        piecehtml.style.zIndex = 3;
                         document.addEventListener("mousemove", move);
-                        console.log(piece.pos + "-" + piece.moving);
+                        console.log(piece.moves);
                     }
-
                 }
-
         }
 
     }
-    function mouseup(e) {
+    function mouseup(e){
     if(e.button === 0 && e.path[0].className === 'piece') {
         piecehtml = e.path[0];
         for (let i = 0; i < Pieces.length; i++) {
