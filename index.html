@@ -28,13 +28,17 @@
     }
 
     .piece {
-
         position: absolute;
-        top: 40px;
-        left: 40px;
         z-index: 2;
-
+        max-width: 100%;
+        height: auto;
+        width: 60px;
+        top: 40px;
+        left: 40px; 
+        
     }
+ 
+
 
 
 </style>
@@ -46,6 +50,9 @@
 <div id="board_1" class="board" style="top:100px"></div>
 
 <button onclick="if(Boards[0].pov==='b'){Boards[0].pov='w';}else{Boards[0].pov='b';}Boards[0].changepov(Tiles);" style="height: 100px;width: 100px;"></button>
+
+
+
 <script>
     var tilesize = 60;
 
@@ -148,6 +155,7 @@
             console.log("FUCK ME!!!");
             this.Xboard = X;
             this.Yboard = Y;
+            this.check = [];
             let boardclass = this;
             console.log(boardclass);
             let board = "";
@@ -190,6 +198,9 @@
                 "K": {name: 'black_king'},
                 "P": {name: 'black_pawn'}
             }
+            const Sets = ["alfonso","alpha","california","cardinal","cburnett","chess7","chessicons","chessmonk","chessnut","companion","dubrovny","freestaunton","fresca","gioco","governor","horsey","icpieces","kilfiger","kosal","leipzig","letter","libra","maestro","magnetic","makruk","maya","merida","merida_new","metaltops","pirat","pirouetti","pixel","regular","reillycraig","riohacha","shapes","sittuyin","staunty","tatiana"]
+            let Set = Sets[Math.floor(Math.random() * Sets.length)]
+
             //check of FEN is valid?
             pos = 0;
             var x = 0, y = 0;
@@ -212,11 +223,15 @@
                         }
                         if (FEN.charAt(i) in Notation) {
                             var loc = IntToPos(x+1,y+1)
-                            var name = Notation[FEN.charAt(i)].name;
-                            var style = "background-image: url('tiles/" + name + ".png'); height: " + tilesize + "px; width: " + tilesize + "px;";
-                            board += '<div class="piece" id="' + loc + '" style="' + style + '"></div>';
+                            
+                            var name;
+                            if(FEN.charAt(i)==FEN.charAt(i).toUpperCase()){name='b'}else{name='w'}
+                            
+                            name += FEN.charAt(i).toLowerCase();
+                            console.log(name);
+                            board += '<img class="piece" id="' + loc + '" src="tiles/'+Set+'/'+name+'.svg" style="height: 60px;">';
 
-                            Pieces[Pieces.length] = new Piece(name, loc, this.boardid)
+                            Pieces[Pieces.length] = new Piece(Notation[FEN.charAt(i)].name, loc, this.boardid)
 
                             x++;
                         }
@@ -319,6 +334,7 @@
         document.removeEventListener("mousemove", move);
         console.log(piece.pos+"-"+piece.moving);
         let new_pos = piece.getnewpos();
+        let old_pos = piece.pos;
         if(piece.moves[1].includes(new_pos)){
 
             document.getElementById(new_pos).remove()
@@ -329,18 +345,49 @@
         }
 
         let nextturn = false;
-        if(!(new_pos===piece.pos) && piece.moves[0].includes(new_pos) ){nextturn = true}
-        console.log(nextturn)
-        if(piece.moves[0].includes(new_pos)){
+        if(!(new_pos===piece.pos) && piece.moves[0].includes(new_pos) ){
+            nextturn = true
             piecehtml.id = new_pos;
             piece.pos = new_pos;
-        }
+            //check... mate?
 
-        piece.move(); //not always works or something
+            let checks = calccheck(board)
+            if (checks = -1){
+                nextturn = false;
+                piece.pos = old_pos;
+                piecehtml.id = old_pos;
+            console.log(old_pos);
+            }
+
+
+            //look if checkmate
+            }
+        
+        piece.move(); 
         if(nextturn) {
             if (board.white_to_move === "b") {board.white_to_move = "w"} else {board.white_to_move = "b"}
         }
 
+    }
+    function calccheck(board){
+        //3 situations:
+        // - no check = 0
+        // - check opponent = any number of checks
+        // - check self = -1
+        let check = [];
+        for(let j = 0;j<Pieces.length;j++){
+            let piece = Pieces[j];
+
+            piece.moves = calcmoves(piece, piecehtml, board);
+      
+            //check is pos where you check
+            for(let i = 0;i<Pieces.length;i++){
+                                if(Pieces[i].name.split("_").pop()==='king' && Pieces[i].name.charAt(0) !== board.white_to_move && piece.moves[1].includes(Pieces[i].pos)){check[check.length] = Pieces[i].pos}
+            }
+            if(Pieces[j].name.charAt(0)!==board.white_to_move){return-1;}
+        }
+            board.check = check;
+            return check.length;
     }
 
     function PosToInt(loc){
@@ -355,11 +402,6 @@
     }
 
 
-
-
-
-
-
     function calcmoves(piece, piecehtml,board){
         let moves = [];
         let hits = [];
@@ -372,7 +414,6 @@
         let n;
         let m;
         let pos = PosToInt(piece.pos);
-        console.log(piece.name.split("_").pop());
         switch(piece.name.split("_").pop()){
             case "pawn":
                 let front = PosToInt(piece.pos)
@@ -575,7 +616,7 @@
     }
     var Boards = [];
     Boards[0] = new Board();
-    Boards[0].createboard(10,8,'rnbqkkqbnr/pppppppppp/8/8/8/8/PPPPPPPPPP/RNBQKKQBNR w KQkq - 0 1')
+    Boards[0].createboard(10,8,'rnbqkkqbnr/1ppp4pp/8/8/8/8/PPPPPPPPPP/RNBQKKQBNR w KQkq - 0 1')
 
 </script>
 
