@@ -352,7 +352,9 @@
             //check... mate?
 
             let checks = calccheck(board)
-            if (checks = -1){
+            console.log("CHECKS:")
+            console.log(checks)
+            if (checks === -1){
                 nextturn = false;
                 piece.pos = old_pos;
                 piecehtml.id = old_pos;
@@ -382,9 +384,18 @@
       
             //check is pos where you check
             for(let i = 0;i<Pieces.length;i++){
-                                if(Pieces[i].name.split("_").pop()==='king' && Pieces[i].name.charAt(0) !== board.white_to_move && piece.moves[1].includes(Pieces[i].pos)){check[check.length] = Pieces[i].pos}
-            }
-            if(Pieces[j].name.charAt(0)!==board.white_to_move){return-1;}
+                
+                if(Pieces[j].name==="white_queen" && Pieces[i].name==="black_king"){
+                console.log(piece.moves);
+
+                if(Pieces[i].name.split("_").pop()==='king' && Pieces[i].name.charAt(0) !== Pieces[j].name.charAt(0) && piece.moves[1].includes(Pieces[i].pos)){
+                    check[check.length] = Pieces[i].pos;
+                    if(Pieces[j].name.charAt(0)!==board.white_to_move){return-1;}
+              
+                }
+                }
+            
+            }   
         }
             board.check = check;
             return check.length;
@@ -614,9 +625,11 @@
             }
         }
     }
+ 
+ 
     var Boards = [];
     Boards[0] = new Board();
-    Boards[0].createboard(10,8,'rnbqkkqbnr/1ppp4pp/8/8/8/8/PPPPPPPPPP/RNBQKKQBNR w KQkq - 0 1')
+    Boards[0].createboard(10,8,'rnbkkkqbnr/1ppp4pp/8/8/8/8/PPPPPPPPPP/RNBKKKQBNR w KQkq - 0 1')
 
 </script>
 
