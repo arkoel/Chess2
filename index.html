@@ -49,27 +49,69 @@
 <div></div>
 <div id="board_1" class="board" style="top:100px"></div>
 
-<button onclick="if(Boards[0].pov==='b'){Boards[0].pov='w';}else{Boards[0].pov='b';}Boards[0].changepov(Tiles);" style="height: 100px;width: 100px;"></button>
+<button onclick="if(Boards[0].pov==='b'){Boards[0].pov='w';}else{Boards[0].pov='b';}Boards[0].changepov(this.Tiles);" style="height: 100px;width: 100px;"></button>
 
 
 
 <script>
     var tilesize = 60;
+    //var Cards = [];
+
+    var All_cards = {
+        0:"firewall",
+        1:"heal",
+        2:"kill",
+        3:"kill",
+        4:"kill",
+        5:"kill",
+        6:"kill",
+        7:"kill",
+        8:"kill",
+        9:"kill"
+    }
+    class Card{
+        constructor(name,player,board){
+            this.name = name;
+            this.player = player; // 'b' or 'w'
+            this.board = board;
+        }
+        play(){
+
+        }
+    }
+
+    class Player{
+        constructor(player,board){
+        this.Cards = [];
+        this.player = player;
+        this.board = board;
+        for(let i = 0; i<3; i++){
+            this.drawcard();
+        }
+    }
+        drawcard(){
+            this.Cards[this.Cards.length] = new Card(All_cards[Math.floor(Math.random() * 10),this.player,this.board.boardid]);
+        }
+               
+    }
 
     class Piece{
-        constructor(name,pos,boardid) {
+        constructor(name,pos,board) {
             this.name = name;
             this.pos = pos;
             this.moving = false;
             this.moving = false;
-            this.boardid = boardid;
+            this.board = board;
             this.moves = [];
         }
+        //gethtml(){
+        //    return document.getElementById(this.pos);     
+        //}
         move(){
             document.getElementById(this.pos).style.left = document.getElementById("tile_"+this.pos).getBoundingClientRect().left + "px";
             document.getElementById(this.pos).style.top = document.getElementById("tile_"+this.pos).getBoundingClientRect().top + "px";
         }
-        getnewpos() {
+        getnewpos(){
             let piecehtml = document.getElementById(this.pos);
             let Xpiece = piecehtml.style.left;
             let Ypiece = piecehtml.style.top;
@@ -86,18 +128,19 @@
 
                 if(distance<toptile[0]){toptile[0] = distance; toptile[1] = alltiles[i]}
             }
-        return toptile[1].id.split("_").pop()
-
-    }
+            return toptile[1].id.split("_").pop()
+        }
+        
 
     }
 
     class Tile{
-        constructor(state, pos, boardid) {
+
+        constructor(state, pos, board) {
             this.state = state;
             this.pos = pos;
             this.firstclick = false;
-            this.boardid = boardid;
+            this.board = board;
         }
         tilecolor() {
             switch (this.state) {
@@ -114,40 +157,40 @@
         }
 
     }
-
-
-
-    var Pieces = [];
-    var Tiles = [];
-    class Board {
+   
+    class Board{
         constructor() {
-        this.boardid = Boards.length;
+        this.boardid = Boards.length+1;
         this.white_to_move = "w";
-        this.pov = "w"
-
+        this.pov = "w";
+        this.Players = []
+        this.Pieces = [];
+        this.Tiles = [];
+        this.Players[0] = new Player('w',this);  
+        this.Players[1] = new Player('b',this);
         }
-        changepov(Tiles) {
-            for (let i = 0; i < Tiles.length; i++) {
-                document.getElementById("tile_" + Tiles[i].pos).id += "-";
+        changepov(){
+            for (let i = 0; i < this.Tiles.length; i++){
+                document.getElementById("tile_" + this.Tiles[i].pos).id += "-";
             }
-            for (let i = 0; i < Tiles.length; i++) {
-                let Int = PosToInt(Tiles[i].pos)
+            for (let i = 0; i < this.Tiles.length; i++) {
+                let Int = PosToInt(this.Tiles[i].pos)
                 let newpos = IntToPos(this.Xboard + 1 - Int[0], this.Yboard + 1 - Int[1]);
-                document.getElementById("tile_" + Tiles[i].pos + "-").id = "tile_" + newpos;
-                Tiles[i].pos = newpos;
+                document.getElementById("tile_" + this.Tiles[i].pos + "-").id = "tile_" + newpos;
+                this.Tiles[i].pos = newpos;
             }
-            for (let i = 0; i < Tiles.length; i++) {
+            for (let i = 0; i < this.Tiles.length; i++) {
                 if (this.Xboard % 2 ^ this.Yboard % 2) {
-                    Tiles[i].state++;
-                    if (Tiles[i].state > 2) {
-                        Tiles[i].state = 1;
+                    this.Tiles[i].state++;
+                    if (this.Tiles[i].state > 2) {
+                        this.Tiles[i].state = 1;
                     }
                 }
-                Tiles[i].defaultcolor();
+                this.Tiles[i].defaultcolor();
             }
 
-            for (let i = 0; i < Pieces.length; i++) {
-                Pieces[i].move()
+            for (let i = 0; i < this.Pieces.length; i++) {
+                this.Pieces[i].move()
             }
 
         }
@@ -156,8 +199,7 @@
             this.Xboard = X;
             this.Yboard = Y;
             this.check = [];
-            let boardclass = this;
-            console.log(boardclass);
+
             let board = "";
             var state = 2;
             let pos = "a1";
@@ -169,8 +211,8 @@
                 for (var j = this.Yboard; j > 0; j--) {
                     pos = IntToPos(i+1,j);
 
-                    Tiles[Tiles.length] = new Tile(state,pos, this.boardid);
-                    let color = Tiles[Tiles.length-1].tilecolor();
+                    this.Tiles[this.Tiles.length] = new Tile(state,pos, this.boardid);
+                    let color = this.Tiles[this.Tiles.length-1].tilecolor();
                     board += '<div class="tile" id="tile_'+pos+'" draggable="false" style="background-color: '+color+'; height: '+tilesize+'px; width: '+tilesize+'px;"></div>';
                     if (state === 1) {
                         state = 2;
@@ -198,40 +240,39 @@
                 "K": {name: 'black_king'},
                 "P": {name: 'black_pawn'}
             }
-            const Sets = ["alfonso","alpha","california","cardinal","cburnett","chess7","chessicons","chessmonk","chessnut","companion","dubrovny","freestaunton","fresca","gioco","governor","horsey","icpieces","kilfiger","kosal","leipzig","letter","libra","maestro","magnetic","makruk","maya","merida","merida_new","metaltops","pirat","pirouetti","pixel","regular","reillycraig","riohacha","shapes","sittuyin","staunty","tatiana"]
-            let Set = Sets[Math.floor(Math.random() * Sets.length)]
+            let Sets = ["alfonso","alpha","california","cardinal","cburnett","chess7","chessicons","chessmonk","chessnut","companion","dubrovny","freestaunton","fresca","gioco","governor","horsey","icpieces","kilfiger","kosal","leipzig","letter","libra","maestro","magnetic","makruk","maya","merida","merida_new","metaltops","pirat","pirouetti","pixel","regular","reillycraig","riohacha","shapes","sittuyin","staunty","tatiana"]
+            this.Set = Sets[Math.floor(Math.random() * Sets.length)]
 
             //check of FEN is valid?
             pos = 0;
             var x = 0, y = 0;
-            for (let i = 0; i < FEN.length; i++) {
-                if (FEN.substr(i, 1) === ' ') {
+            for(let i = 0; i < FEN.length; i++) {
+                if(FEN.substr(i, 1) === ' ') {
                     pos++;
                     i++;
                 }
                 const numbers = "123456789"
                 switch (pos) {
                     case 0:
-                        if (FEN.charAt(i) === '/') {
+                        if(FEN.charAt(i) === '/') {
 
                             x = 0;
                             y++;
                         }
-                        if (numbers.includes(FEN.charAt(i))) {
+                        if(numbers.includes(FEN.charAt(i))) {
                             x += Number(FEN.charAt(i));
 
                         }
-                        if (FEN.charAt(i) in Notation) {
+                        if(FEN.charAt(i) in Notation) {
                             var loc = IntToPos(x+1,y+1)
                             
                             var name;
                             if(FEN.charAt(i)==FEN.charAt(i).toUpperCase()){name='b'}else{name='w'}
-                            
                             name += FEN.charAt(i).toLowerCase();
                             console.log(name);
-                            board += '<img class="piece" id="' + loc + '" src="tiles/'+Set+'/'+name+'.svg" style="height: 60px;">';
+                            board += '<img class="piece" id="' + loc + '" src="tiles/'+this.Set+'/'+name+'.svg" style="height: 60px;">';
 
-                            Pieces[Pieces.length] = new Piece(Notation[FEN.charAt(i)].name, loc, this.boardid)
+                            this.Pieces[this.Pieces.length] = new Piece(Notation[FEN.charAt(i)].name, loc, this.boardid)
 
                             x++;
                         }
@@ -263,8 +304,8 @@
                         alert('ERROR SOMETHING WENT WRONG');
                 }
             }
-            console.log(Pieces);
-            console.log(Tiles);
+            console.log(this.Pieces);
+            console.log(this.Tiles);
             document.getElementById("board_1").innerHTML = board;
             document.getElementById("board_1").style.width = tilesize * this.Xboard + "px"
             document.getElementById("board_1").style.height = tilesize * this.Yboard + "px"
@@ -275,7 +316,7 @@
             function arrayfunction(piece){
                 piece.move();
             }//move all pieces to correct spot
-            Pieces.forEach(arrayfunction)
+            this.Pieces.forEach(arrayfunction)
 
 
             document.querySelectorAll(".tile").forEach(tilehtml => {
@@ -293,6 +334,7 @@
             document.querySelectorAll(".piece").forEach(piecehtml => {
                 piecehtml.oncontextmenu = function(e) {
                     e.preventDefault();
+                    console.log('e');
                     //geen raar menu als je rechtsklikt
                 }
                 piecehtml.addEventListener("mousedown", mousedown, false);
@@ -308,15 +350,15 @@
 
 
     function move(e) {
-        //console.log(e);
+        let boardid = e.path[e.path.length-5].id;
+        boardid = boardid.charAt(boardid.length-1);
+        let board = window.Boards[boardid-1];
 
-        for(let i = 0; i < Pieces.length;i++){
-            if(Pieces[i].moving){piece = Pieces[i]}
+        for(let i = 0; i < board.Pieces.length;i++){
+            if(board.Pieces[i].moving){piece = board.Pieces[i]}
         }
         piecehtml = document.getElementById(piece.pos);
-        for(let i=0; i<Boards.length;i++){
-            if(Boards[i].boardid === piece.boardid){var board = Boards[i];}
-        }
+       
 
         // document.removeEventListener("mousemove", move);piece.moving = false;console.log("fixed");
         //removes sticky pieces
@@ -335,11 +377,14 @@
         console.log(piece.pos+"-"+piece.moving);
         let new_pos = piece.getnewpos();
         let old_pos = piece.pos;
-        if(piece.moves[1].includes(new_pos)){
-
+        let capture = piece.moves[1].includes(new_pos);
+        if(capture){
             document.getElementById(new_pos).remove()
-            for (let i = 0; i < Pieces.length; i++) {
-                if (Pieces[i].pos === new_pos) {Pieces.splice(i, 1);}
+            for(let i = 0; i < board.Pieces.length; i++) {
+                if(board.Pieces[i].pos === new_pos){
+                    var attackpiece = board.Pieces[i];
+                    board.Pieces.splice(i, 1);
+                }
             }//remove hit piece
         piece.moves[0] = new_pos;
         }
@@ -350,24 +395,48 @@
             piecehtml.id = new_pos;
             piece.pos = new_pos;
             //check... mate?
-
+            //console.log(calcmoves(piece,piecehtml,board));
             let checks = calccheck(board)
             console.log("CHECKS:")
             console.log(checks)
-            if (checks === -1){
+            if(checks === -1){
                 nextturn = false;
                 piece.pos = old_pos;
                 piecehtml.id = old_pos;
-            console.log(old_pos);
-            }
+                if(capture){
+                    let attack_name = attackpiece.name.charAt(0)+attackpiece.name.charAt(6);
+                    let element = document.createElement('img');
+                    element.setAttribute('class','piece');
+                    element.setAttribute('id',attackpiece.pos);
+                    element.setAttribute('src','tiles/'+board.Set+'/'+attack_name+'.svg');
+                    element.setAttribute('style','height: 60px;');
+                    
+                  //  '<img class="piece" id="' + attackpiece.pos + '" src="tiles/'+board.Set+'/'+attack_name+'.svg" style="height: 60px;">'
+                    document.getElementById("board_"+board.boardid).appendChild(element);
+                    
+                    board.Pieces[this.Pieces.length] = new Piece(attackpiece.name,attackpiece.pos,board.boardid)
+                    attackpiece.move();
+                    let attackhtml = document.getElementById(attackpiece.pos)
+                    
+                    console.log(attackhtml)
+                    attackhtml.addEventListener("mousedown", mousedown, false);
+                    attackhtml.addEventListener("mouseup", mouseup, false);
 
+                    //take points if given
+                
+                }
+                
+            }
+            
 
             //look if checkmate
             }
         
         piece.move(); 
         if(nextturn) {
-            if (board.white_to_move === "b") {board.white_to_move = "w"} else {board.white_to_move = "b"}
+            if(board.white_to_move === "b") {board.white_to_move = "w"} else {board.white_to_move = "b"}
+            var audio = new Audio('sounds/piece_capture.mp3');
+            audio.play();
         }
 
     }
@@ -377,23 +446,21 @@
         // - check opponent = any number of checks
         // - check self = -1
         let check = [];
-        for(let j = 0;j<Pieces.length;j++){
-            let piece = Pieces[j];
+        for(let j = 0;j<board.Pieces.length;j++){
+            let piece = board.Pieces[j];
 
             piece.moves = calcmoves(piece, piecehtml, board);
       
             //check is pos where you check
-            for(let i = 0;i<Pieces.length;i++){
+            for(let i = 0;i<board.Pieces.length;i++){
                 
-                if(Pieces[j].name==="white_queen" && Pieces[i].name==="black_king"){
-                console.log(piece.moves);
+       
+                if(board.Pieces[i].name.split("_").pop()==='king' && board.Pieces[i].name.charAt(0) !== board.Pieces[j].name.charAt(0) && piece.moves[1].includes(board.Pieces[i].pos)){
+                    check[check.length] = board.Pieces[i].pos;
+                    if(board.Pieces[j].name.charAt(0)!==board.white_to_move){return-1;}
+                }
 
-                if(Pieces[i].name.split("_").pop()==='king' && Pieces[i].name.charAt(0) !== Pieces[j].name.charAt(0) && piece.moves[1].includes(Pieces[i].pos)){
-                    check[check.length] = Pieces[i].pos;
-                    if(Pieces[j].name.charAt(0)!==board.white_to_move){return-1;}
-              
-                }
-                }
+                
             
             }   
         }
@@ -433,11 +500,11 @@
                 if(piece.name.charAt(0)==='w'){dir=1;Ystart=2}else{dir=-1;Ystart=board.Yboard-1}
                 front[1]+=dir
                 let move = [true,true];
-                for(let i=0;i<Pieces.length;i++){
-                        if(Pieces[i].pos === IntToPos(front[0],front[1])){move[0] = false;move[1] = false}
-                        if(Pieces[i].pos === IntToPos(front[0],front[1]+dir)){move[1] = false;}
-                        if(Pieces[i].pos === IntToPos(front[0]-1,front[1]) && Pieces[i].name.charAt(0)!==board.white_to_move){ hits[hits.length] = IntToPos(front[0]-1,front[1]);}
-                        if(Pieces[i].pos === IntToPos(front[0]+1,front[1]) && Pieces[i].name.charAt(0)!==board.white_to_move){ hits[hits.length] = IntToPos(front[0]+1,front[1]);}
+                for(let i=0;i<board.Pieces.length;i++){
+                        if(board.Pieces[i].pos === IntToPos(front[0],front[1])){move[0] = false;move[1] = false}
+                        if(board.Pieces[i].pos === IntToPos(front[0],front[1]+dir)){move[1] = false;}
+                        if(board.Pieces[i].pos === IntToPos(front[0]-1,front[1]) && board.Pieces[i].name.charAt(0)!==piece.name.charAt(0)){ hits[hits.length] = IntToPos(front[0]-1,front[1]);}
+                        if(board.Pieces[i].pos === IntToPos(front[0]+1,front[1]) && board.Pieces[i].name.charAt(0)!==piece.name.charAt(0)){ hits[hits.length] = IntToPos(front[0]+1,front[1]);}
                     }
                 if(move[0]){
                     moves[moves.length] = IntToPos(front[0],front[1]);
@@ -454,9 +521,9 @@
                 while(!stop){
                      dx = pos[0]+m * dir[n][0];
                      dy = pos[1]+m * dir[n][1];
-                    for(let i=0;i<Pieces.length;i++) {
-                        if(Pieces[i].pos === IntToPos(dx,dy)){
-                            if(Pieces[i].name.charAt(0)!==board.white_to_move){hits[hits.length]=IntToPos(dx,dy)}
+                    for(let i=0;i<board.Pieces.length;i++) {
+                        if(board.Pieces[i].pos === IntToPos(dx,dy)){
+                            if(board.Pieces[i].name.charAt(0)!==piece.name.charAt(0)){hits[hits.length]=IntToPos(dx,dy)}
                             end = true;
                         }
                     }
@@ -475,10 +542,10 @@
                 for(let i=0;i<8;i++){
                     dx = pos[0]+dir[i][0];
                     dy = pos[1]+dir[i][1];
-                    for(let j=0;j<Pieces.length;j++){
-                        if(Pieces[j].pos === IntToPos(dx,dy)){
+                    for(let j=0;j<board.Pieces.length;j++){
+                        if(board.Pieces[j].pos === IntToPos(dx,dy)){
                             hit = true;
-                            if(Pieces[j].name.charAt(0)!==board.white_to_move){hits[hits.length]=IntToPos(dx,dy)}
+                            if(board.Pieces[j].name.charAt(0)!==piece.name.charAt(0)){hits[hits.length]=IntToPos(dx,dy)}
                         }
                     }
                     if(!hit){moves[moves.length]=IntToPos(dx,dy)}
@@ -495,9 +562,9 @@
                 while(!stop){
                     dx = pos[0]+m * dir[n][0];
                     dy = pos[1]+m * dir[n][1];
-                    for(let i=0;i<Pieces.length;i++) {
-                        if(Pieces[i].pos === IntToPos(dx,dy)){
-                            if(Pieces[i].name.charAt(0)!==board.white_to_move){hits[hits.length]=IntToPos(dx,dy)}
+                    for(let i=0;i<board.Pieces.length;i++) {
+                        if(board.Pieces[i].pos === IntToPos(dx,dy)){
+                            if(board.Pieces[i].name.charAt(0)!==piece.name.charAt(0)){hits[hits.length]=IntToPos(dx,dy)}
                             end = true;
                         }
                     }
@@ -520,9 +587,9 @@
                 while(!stop){
                     dx = pos[0]+m * dir[n][0];
                     dy = pos[1]+m * dir[n][1];
-                    for(let i=0;i<Pieces.length;i++) {
-                        if(Pieces[i].pos === IntToPos(dx,dy)){
-                            if(Pieces[i].name.charAt(0)!==board.white_to_move){hits[hits.length]=IntToPos(dx,dy)}
+                    for(let i=0;i<board.Pieces.length;i++) {
+                        if(board.Pieces[i].pos === IntToPos(dx,dy)){
+                            if(board.Pieces[i].name.charAt(0)!==piece.name.charAt(0)){hits[hits.length]=IntToPos(dx,dy)}
                             end = true;
                         }
                     }
@@ -546,8 +613,14 @@
 
 
     function mousedown(e) {
-
+        let boardid = e.path[e.path.length-5].id;
+        boardid = boardid.charAt(boardid.length-1);
+        let board = window.Boards[boardid-1];
         e.preventDefault();
+        let piece;
+        let tilehtml;
+        let tile;
+        let piecehtml;
         if(e.button === 2) {
 
             //rightclick
@@ -555,15 +628,15 @@
             if(e.path[0].className === 'tile') {
                     tilehtml = e.path[0];
                     let pos = tilehtml.id.split("_").pop()
-                for (let i = 0; i < Tiles.length; i++) {
-                    if(Tiles[i].pos === pos){tile = Tiles[i];}
+                for(let i = 0; i < board.Tiles.length; i++) {
+                    if(board.Tiles[i].pos === pos){tile = board.Tiles[i];}
                 }
 
             }else if(e.path[0].className === 'piece') {
                 piecehtml = e.path[0];
-                for (let i = 0; i < Tiles.length; i++) {
-                    if (Tiles[i].pos === piecehtml.id) {
-                        tile = Tiles[i]
+                for(let i = 0; i < board.Tiles.length; i++) {
+                    if(board.Tiles[i].pos === piecehtml.id) {
+                        tile = board.Tiles[i]
                     }
                 }
             tilehtml = document.getElementById("tile_"+piecehtml.id)
@@ -582,9 +655,9 @@
                 //leftclick
 
                 //remove all green
-                for (let i = 0; i < Tiles.length; i++) {
-                    Tiles[i].defaultcolor();
-                    Tiles[i].firstclick = false;
+                for(let i = 0; i < board.Tiles.length; i++) {
+                    board.Tiles[i].defaultcolor();
+                    board.Tiles[i].firstclick = false;
                 }
 
 
@@ -592,13 +665,11 @@
                 if(e.path[0].className === 'piece' ){
                     piecehtml = e.path[0]
 
-                    for(let i = 0; i < Pieces.length; i++) {
-                        if(Pieces[i].pos === piecehtml.id){piece = Pieces[i]}
-                        Pieces[i].moving = false;
+                    for(let i = 0; i < board.Pieces.length; i++) {
+                        if(board.Pieces[i].pos === piecehtml.id){piece = board.Pieces[i]}
+                        board.Pieces[i].moving = false;
                     }
-                    for(let i=0; i<Boards.length;i++){
-                        if(Boards[i].boardid === piece.boardid){var board = Boards[i];}
-                    }
+                 
                     if(board.white_to_move === piece.name.charAt(0)) {
                         piece.moves = calcmoves(piece, piecehtml, board);
                         piece.moving = true;
@@ -611,16 +682,22 @@
 
     }
     function mouseup(e){
+
+        let boardid = e.path[e.path.length-5].id;
+        boardid = boardid.charAt(boardid.length-1);
+        let board = window.Boards[boardid-1];
+        e.preventDefault();
+        let piece;
+    
+        let piecehtml;
     if(e.button === 0 && e.path[0].className === 'piece') {
         piecehtml = e.path[0];
-        for (let i = 0; i < Pieces.length; i++) {
-            if (Pieces[i].pos === piecehtml.id) {piece = Pieces[i];}
+        for (let i = 0; i < board.Pieces.length; i++) {
+            if(board.Pieces[i].pos === piecehtml.id) {piece = board.Pieces[i];}
         }
-        for(let i=0; i<Boards.length;i++){
-            if(Boards[i].boardid === piece.boardid){var board = Boards[i];}
-        }
+       
 
-        if (piece.moving) {
+        if(piece.moving) {
                 stopmove(piece, piecehtml,board);
             }
         }
