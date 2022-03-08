@@ -49,6 +49,7 @@
 <div></div>
 <div id="board_1" class="board" style="top:100px"></div>
 
+
 <button onclick="if(Boards[0].pov==='b'){Boards[0].pov='w';}else{Boards[0].pov='b';}Boards[0].changepov(this.Tiles);" style="height: 100px;width: 100px;"></button>
 
 
@@ -240,7 +241,7 @@
                 "K": {name: 'black_king'},
                 "P": {name: 'black_pawn'}
             }
-            let Sets = ["alfonso","alpha","california","cardinal","cburnett","chess7","chessicons","chessmonk","chessnut","companion","dubrovny","freestaunton","fresca","gioco","governor","horsey","icpieces","kilfiger","kosal","leipzig","letter","libra","maestro","magnetic","makruk","maya","merida","merida_new","metaltops","pirat","pirouetti","pixel","regular","reillycraig","riohacha","shapes","sittuyin","staunty","tatiana"]
+            let Sets = ["alfonso","california","cardinal","cburnett","chess7","chessicons","chessmonk","chessnut","companion","dubrovny","freestaunton","fresca","gioco","governor","horsey","icpieces","kilfiger","kosal","leipzig","letter","libra","maestro","magnetic","makruk","maya","merida","merida_new","metaltops","pirat","pirouetti","pixel","regular","reillycraig","riohacha","shapes","sittuyin","staunty","tatiana"]
             this.Set = Sets[Math.floor(Math.random() * Sets.length)]
 
             //check of FEN is valid?
@@ -306,9 +307,9 @@
             }
             console.log(this.Pieces);
             console.log(this.Tiles);
-            document.getElementById("board_1").innerHTML = board;
-            document.getElementById("board_1").style.width = tilesize * this.Xboard + "px"
-            document.getElementById("board_1").style.height = tilesize * this.Yboard + "px"
+            document.getElementById("board_"+this.boardid).innerHTML = board;
+            document.getElementById("board_"+this.boardid).style.width = tilesize * this.Xboard + "px"
+            document.getElementById("board_"+this.boardid).style.height = tilesize * this.Yboard + "px"
 
 
 
@@ -414,7 +415,7 @@
                   //  '<img class="piece" id="' + attackpiece.pos + '" src="tiles/'+board.Set+'/'+attack_name+'.svg" style="height: 60px;">'
                     document.getElementById("board_"+board.boardid).appendChild(element);
                     
-                    board.Pieces[this.Pieces.length] = new Piece(attackpiece.name,attackpiece.pos,board.boardid)
+                    board.Pieces[board.Pieces.length] = new Piece(attackpiece.name,attackpiece.pos,board.boardid)
                     attackpiece.move();
                     let attackhtml = document.getElementById(attackpiece.pos)
                     
@@ -602,8 +603,28 @@
                 }
                 break;
             case "king":
-
-                break;
+            dir = [[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]];
+                
+                for(let i = 0; i<dir.length; i++){
+                    
+                    dx = pos[0]+dir[i][0]
+                    dy = pos[1]+dir[i][1]
+                    if((dx>=1 && dx <=board.Xboard && dy>=1 && dy<=board.Yboard)){
+                        n = IntToPos(dx,dy);
+                        m = true;
+                        
+                        for(let j = 0;j<board.Pieces.length;j++){
+                            if(board.Pieces[j].pos===n){m=false}
+                        }
+                        if(m){
+                            console.log("HIER KOMT I "+n)
+                            piece.pos = n;
+                            piecehtml.id = n;
+                            piece.move();
+                        }
+                    }
+                }
+            break;
         }
 
 
@@ -706,7 +727,9 @@
  
     var Boards = [];
     Boards[0] = new Board();
-    Boards[0].createboard(10,8,'rnbkkkqbnr/1ppp4pp/8/8/8/8/PPPPPPPPPP/RNBKKKQBNR w KQkq - 0 1')
+    //Boards[1] = new Board();
+    Boards[0].createboard(10,8,'rnbkkkqbnr/pppppppppp/8/8/8/8/PPPPPPPPPP/RNBKKKQBNR w KQkq - 0 1')
+    //Boards[1].createboard(10,8,'rnbkkkqbnr/1ppp4pp/8/8/8/8/PPPPPPPPPP/RNBKKKQBNR w KQkq - 0 1')
 
 </script>
 
