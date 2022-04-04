@@ -1,0 +1,69 @@
+function stopmove(piece, piecehtml, board){
+        piecehtml.style.zIndex = 2;
+        piece.moving = false;
+        document.removeEventListener("mousemove", move);
+
+        //check if legal move
+
+        let new_pos = piece.getnewpos();
+        let old_pos = piece.pos;
+        let capture = piece.moves[1].includes(new_pos);
+        if(capture){
+            document.getElementById(new_pos).remove()
+            for(let i = 0; i < board.Pieces.length; i++) {
+                if(board.Pieces[i].pos === new_pos){
+                    var attackpiece = board.Pieces[i];
+                    board.Pieces.splice(i, 1);
+                }
+            }//remove hit piece
+        piece.moves[0] = new_pos;
+        }
+
+        let nextturn = false;
+        if(!(new_pos===piece.pos) && piece.moves[0].includes(new_pos) ){
+            nextturn = true
+            piecehtml.id = new_pos;
+            piece.pos = new_pos;
+            //check... mate?
+            let checks = calccheck(board)
+            console.log("CHECKS: "+checks)
+            if(checks === -1){
+                nextturn = false;
+                piece.pos = old_pos;
+                piecehtml.id = old_pos;
+                if(capture){
+                    let attack_name = attackpiece.name.charAt(0)+attackpiece.name.charAt(6);
+                    let element = document.createElement('img');
+                    element.setAttribute('class','piece');
+                    element.setAttribute('id',attackpiece.pos);
+                    element.setAttribute('src','tiles/'+board.Set+'/'+attack_name+'.svg');
+                    element.setAttribute('style','height: 60px;');
+                    
+                  //  '<img class="piece" id="' + attackpiece.pos + '" src="tiles/'+board.Set+'/'+attack_name+'.svg" style="height: 60px;">'
+                    document.getElementById("board_"+board.boardid).appendChild(element);
+                    
+                    board.Pieces[board.Pieces.length] = new Piece(attackpiece.name,attackpiece.pos,board.boardid)
+                    attackpiece.move();
+                    let attackhtml = document.getElementById(attackpiece.pos)
+                    
+                    console.log(attackhtml)
+                    attackhtml.addEventListener("mousedown", mousedown, false);
+                    attackhtml.addEventListener("mouseup", mouseup, false);
+
+                    //take points if given
+                
+                }
+                
+            }
+            
+
+            //look if checkmate
+            }
+        
+        piece.move(); 
+        if(nextturn) {
+            if(board.white_to_move === "b") {board.white_to_move = "w"} else {board.white_to_move = "b"}
+            var audio = new Audio('sounds/piece_capture.mp3');
+            audio.play();
+        }
+}

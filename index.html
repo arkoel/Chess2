@@ -46,9 +46,8 @@
 
 <body id="page">
 <!--<button onclick="loadboard(8,8)">druk hier maar op dan</button>-->
-<div></div>
-<div id="board_1" class="board" style="top:100px"></div>
 
+<div id="board_1" class="board" style="top:100px"></div>
 
 <button onclick="if(Boards[0].pov==='b'){Boards[0].pov='w';}else{Boards[0].pov='b';}Boards[0].changepov(this.Tiles);" style="height: 100px;width: 100px;"></button>
 
@@ -241,7 +240,7 @@
                 "K": {name: 'black_king'},
                 "P": {name: 'black_pawn'}
             }
-            let Sets = ["alfonso","california","cardinal","cburnett","chess7","chessicons","chessmonk","chessnut","companion","dubrovny","freestaunton","fresca","gioco","governor","horsey","icpieces","kilfiger","kosal","leipzig","letter","libra","maestro","magnetic","makruk","maya","merida","merida_new","metaltops","pirat","pirouetti","pixel","regular","reillycraig","riohacha","shapes","sittuyin","staunty","tatiana"]
+            let Sets = ["alfonso","california","cardinal","cburnett","chess7","chessicons","chessmonk","chessnut","companion","dubrovny","freestaunton","fresca","gioco","governor","horsey","icpieces","kilfiger","kosal","leipzig","letter","libra","maestro","makruk","maya","merida","merida_new","metaltops","pirat","pirouetti","pixel","regular","reillycraig","riohacha","shapes","sittuyin","staunty","tatiana"]
             this.Set = Sets[Math.floor(Math.random() * Sets.length)]
 
             //check of FEN is valid?
@@ -307,9 +306,9 @@
             }
             console.log(this.Pieces);
             console.log(this.Tiles);
-            document.getElementById("board_"+this.boardid).innerHTML = board;
-            document.getElementById("board_"+this.boardid).style.width = tilesize * this.Xboard + "px"
-            document.getElementById("board_"+this.boardid).style.height = tilesize * this.Yboard + "px"
+            document.getElementById("board_1").innerHTML = board;
+            document.getElementById("board_1").style.width = tilesize * this.Xboard + "px"
+            document.getElementById("board_1").style.height = tilesize * this.Yboard + "px"
 
 
 
@@ -335,7 +334,6 @@
             document.querySelectorAll(".piece").forEach(piecehtml => {
                 piecehtml.oncontextmenu = function(e) {
                     e.preventDefault();
-                    console.log('e');
                     //geen raar menu als je rechtsklikt
                 }
                 piecehtml.addEventListener("mousedown", mousedown, false);
@@ -359,51 +357,43 @@
             if(board.Pieces[i].moving){piece = board.Pieces[i]}
         }
         piecehtml = document.getElementById(piece.pos);
-       
-
         // document.removeEventListener("mousemove", move);piece.moving = false;console.log("fixed");
         //removes sticky pieces
-            var newX = e.clientX - 30;
-            var newY = e.clientY - 30;
+        var newX = e.clientX - 30;
+        var newY = e.clientY - 30;
 
-            piecehtml.style.left = newX + "px";
-            piecehtml.style.top = newY + "px";
+        piecehtml.style.left = newX + "px";
+        piecehtml.style.top = newY + "px";
 
-        }
-
-    function stopmove(piece, piecehtml, board){
-        piecehtml.style.zIndex = 2;
-        piece.moving = false;
-        document.removeEventListener("mousemove", move);
-        console.log(piece.pos+"-"+piece.moving);
-        let new_pos = piece.getnewpos();
-        let old_pos = piece.pos;
-        let capture = piece.moves[1].includes(new_pos);
-        if(capture){
-            document.getElementById(new_pos).remove()
-            for(let i = 0; i < board.Pieces.length; i++) {
-                if(board.Pieces[i].pos === new_pos){
+    }
+    
+    function iflegal(old_pos,new_pos,piece,piecehtml,board){ //returns true or false
+        piece.moves = calcmoves(piece,piecehtml,board);
+    
+        if(!(new_pos===old_pos) && (piece.moves[0].includes(new_pos) || piece.moves[1].includes(new_pos))){
+        
+            let capture = 0;
+            for(let i = 0;i<board.Pieces.length;i++){
+                if(board.Pieces[i].pos===new_pos && board.Pieces[i].name.charAt(0)){
+                    capture=1;
                     var attackpiece = board.Pieces[i];
                     board.Pieces.splice(i, 1);
+                    document.getElementById(new_pos).remove()
+                //piece.moves[0] = new_pos;
                 }
-            }//remove hit piece
-        piece.moves[0] = new_pos;
-        }
-
-        let nextturn = false;
-        if(!(new_pos===piece.pos) && piece.moves[0].includes(new_pos) ){
-            nextturn = true
-            piecehtml.id = new_pos;
+            }
             piece.pos = new_pos;
-            //check... mate?
-            //console.log(calcmoves(piece,piecehtml,board));
-            let checks = calccheck(board)
-            console.log("CHECKS:")
-            console.log(checks)
+            piecehtml.id = new_pos;
+            piece.move();
+
+            let checks = calccheck(board);
+
+            console.log("CHECKS: "+checks);
+            piece.pos = old_pos;
+            piecehtml.id = old_pos;
+            piece.move();
+
             if(checks === -1){
-                nextturn = false;
-                piece.pos = old_pos;
-                piecehtml.id = old_pos;
                 if(capture){
                     let attack_name = attackpiece.name.charAt(0)+attackpiece.name.charAt(6);
                     let element = document.createElement('img');
@@ -411,8 +401,8 @@
                     element.setAttribute('id',attackpiece.pos);
                     element.setAttribute('src','tiles/'+board.Set+'/'+attack_name+'.svg');
                     element.setAttribute('style','height: 60px;');
-                    
-                  //  '<img class="piece" id="' + attackpiece.pos + '" src="tiles/'+board.Set+'/'+attack_name+'.svg" style="height: 60px;">'
+                   
+                    // '<img class="piece" id="' + attackpiece.pos + '" src="tiles/'+board.Set+'/'+attack_name+'.svg" style="height: 60px;">'
                     document.getElementById("board_"+board.boardid).appendChild(element);
                     
                     board.Pieces[board.Pieces.length] = new Piece(attackpiece.name,attackpiece.pos,board.boardid)
@@ -424,23 +414,62 @@
                     attackhtml.addEventListener("mouseup", mouseup, false);
 
                     //take points if given
-                
                 }
-                
+                return false;
             }
-            
+            return true;
+        }
+        return false;
+    }
 
-            //look if checkmate
+
+    
+    function stopmove(piece, piecehtml, board){
+        piecehtml.style.zIndex = 2;
+        piece.moving = false;
+        document.removeEventListener("mousemove", move);
+
+        //check if legal move
+
+        let new_pos = piece.getnewpos();
+        let old_pos = piece.pos;
+        //console.log(iflegal(new_pos,old_pos,piece,piecehtml,board));
+        if(iflegal(old_pos,new_pos,piece,piecehtml,board)){
+            if(piece.moves[1].includes(new_pos)){
+                //take piece
+                console.log("TAKING PIECE");
             }
-        
-        piece.move(); 
-        if(nextturn) {
+            piecehtml.id = new_pos;
+            piece.pos = new_pos;
+                       
             if(board.white_to_move === "b") {board.white_to_move = "w"} else {board.white_to_move = "b"}
             var audio = new Audio('sounds/piece_capture.mp3');
             audio.play();
+        
         }
-
+        piece.move();
+        //calc checkmate
+        let checkmate = true;
+        for(let i = 0; i<board.Pieces.length;i++){
+            if(board.Pieces[i].name.charAt(0)===board.white_to_move){
+                console.log("TOGGLE");
+                piece = board.Pieces[i];
+                piecehtml = document.getElementById(piece.pos);
+                piece.moves = calcmoves(piece,piecehtml,board);
+                //console.log(piece);
+                //console.log(piece.moves);
+                for(let n = 0; n<piece.moves[0].length;n++){
+                    console.log("BRUH");
+                    if(iflegal(piece.pos, piece.moves[0][n], piece, piecehtml, board)){checkmate = false;console.log("BRUH"); return;}
+                }
+                for(let m = 0; m<piece.moves[1].length;m++){
+                    if(iflegal(piece.pos, piece.moves[1][m], piece, piecehtml, board)){checkmate = false; return;}
+                }
+            }
+        }       
+        if(checkmate){alert("CHECKMATE!");}
     }
+
     function calccheck(board){
         //3 situations:
         // - no check = 0
@@ -449,21 +478,20 @@
         let check = [];
         for(let j = 0;j<board.Pieces.length;j++){
             let piece = board.Pieces[j];
-
+            let piecehtml = document.getElementById(piece.pos);
+            if(piece.name.split("_").pop()!=="king"){
             piece.moves = calcmoves(piece, piecehtml, board);
-      
+
             //check is pos where you check
             for(let i = 0;i<board.Pieces.length;i++){
                 
-       
                 if(board.Pieces[i].name.split("_").pop()==='king' && board.Pieces[i].name.charAt(0) !== board.Pieces[j].name.charAt(0) && piece.moves[1].includes(board.Pieces[i].pos)){
                     check[check.length] = board.Pieces[i].pos;
                     if(board.Pieces[j].name.charAt(0)!==board.white_to_move){return-1;}
                 }
 
-                
-            
             }   
+            }
         }
             board.check = check;
             return check.length;
@@ -603,28 +631,33 @@
                 }
                 break;
             case "king":
-            dir = [[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]];
+
+                dir = [[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]];
                 
                 for(let i = 0; i<dir.length; i++){
-                    
                     dx = pos[0]+dir[i][0]
                     dy = pos[1]+dir[i][1]
                     if((dx>=1 && dx <=board.Xboard && dy>=1 && dy<=board.Yboard)){
                         n = IntToPos(dx,dy);
-                        m = true;
+                        stop = 0;
                         
                         for(let j = 0;j<board.Pieces.length;j++){
-                            if(board.Pieces[j].pos===n){m=false}
+                            if(board.Pieces[j].pos===n){
+                                if(board.Pieces[j].name.charAt(0)===piece.name.charAt(0)){stop=1;}
+                                else{stop=2;}
+                            }
                         }
-                        if(m){
-                            console.log("HIER KOMT I "+n)
-                            piece.pos = n;
-                            piecehtml.id = n;
-                            piece.move();
+                        if(stop===0){
+                           moves[moves.length] = n;
                         }
+                        if(stop===2){
+                            hits[hits.length] = n;
+                        }
+                    
                     }
                 }
-            break;
+
+                break;
         }
 
 
@@ -727,9 +760,7 @@
  
     var Boards = [];
     Boards[0] = new Board();
-    //Boards[1] = new Board();
-    Boards[0].createboard(10,8,'rnbkkkqbnr/pppppppppp/8/8/8/8/PPPPPPPPPP/RNBKKKQBNR w KQkq - 0 1')
-    //Boards[1].createboard(10,8,'rnbkkkqbnr/1ppp4pp/8/8/8/8/PPPPPPPPPP/RNBKKKQBNR w KQkq - 0 1')
+    Boards[0].createboard(10,8,'rnbkppqbnr/ppp1pppppp/8/8/8/8/PPPPPPPPPP/RNBKPPQBNR w KQkq - 0 1')
 
 </script>
 

@@ -1,0 +1,14 @@
+ // console.log("HIER KOMT I "+n);
+                           // piece.pos = n;
+                           // piecehtml.id = n;
+                           // piece.move();
+                           // if(calccheck(board)===0){
+                           //     moves[moves.length] = n;
+                           // }
+                           // pos = IntToPos(pos[0],pos[1]);
+                           // piece.pos = pos;
+                           // piecehtml.id = pos;
+                           // piece.move();
+                           // console.log(piece);
+                           // console.log(piecehtml);
+                           // pos = PosToInt(pos)
