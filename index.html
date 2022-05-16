@@ -108,6 +108,12 @@
         //    return document.getElementById(this.pos);     
         //}
         move(){
+            if(arguments.length>0){
+                let pos = arguments[0]
+                document.getElementById(this.pos).id = pos;
+                this.pos = pos;
+            }
+            console.log(this.pos);
             document.getElementById(this.pos).style.left = document.getElementById("tile_"+this.pos).getBoundingClientRect().left + "px";
             document.getElementById(this.pos).style.top = document.getElementById("tile_"+this.pos).getBoundingClientRect().top + "px";
         }
