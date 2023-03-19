@@ -1,0 +1,35 @@
+
+    #page {
+        background-color: #575656;
+    }
+
+    .colum {
+        display: inline-grid;
+    }
+
+    .board {
+        left: 100px;
+        top: 100px;
+        border: 2px black solid;
+        color : drar
+    }
+
+    .tile {
+        /*
+        border: 2px #000000 solid;
+*/
+        padding-top: -10px;
+        float: left;
+        z-index: 1;
+    }
+
+    .piece {
+        position: absolute;
+        z-index: 2;
+        max-width: 100%;
+        height: auto;
+        width: 60px;
+        top: 40px;
+        left: 40px;
+
+    }
